@@ -14,4 +14,7 @@ pub enum Error {
 
     /// Too many chars were provided to `Board::try_from`
     InvalidBoardLength,
+
+    /// The board position was illegal
+    InvalidBoard,
 }
