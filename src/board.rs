@@ -2,7 +2,7 @@ use crate::error::{Error, Result};
 use std::{convert::TryFrom, fmt::Display};
 
 /// Stores the positions of X and O on the board.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Board {
     /// 9 bits are required so a 16 bit unsigned type
     /// is needed. Stores positions for Player::X
@@ -87,6 +87,32 @@ impl Board {
             _ => Err(Error::InvalidPosition(pos)),
         }
     }
+
+    /// Sets the square at `pos` to `val`. Does not check whether the
+    /// move is legal.
+    ///
+    /// # Arguments
+    ///
+    /// * `pos` The position of the square
+    /// * `val` None => Empty, Some(v) => v
+    pub fn set_square(&mut self, pos: usize, val: Option<Player>) {
+        if (0..=8).contains(&pos) {
+            let bit = 1 << pos;
+            self.squares_o &= !bit;
+            self.squares_x &= !bit;
+
+            match val {
+                Some(Player::X) => self.squares_x |= bit,
+                Some(Player::O) => self.squares_o |= bit,
+                None => (),
+            }
+        }
+    }
+
+    /// Checks whether `self` is a valid position
+    pub fn is_valid(&self) -> bool {
+        self.squares_o & self.squares_x == 0
+    }
 }
 
 impl Display for Board {
@@ -97,7 +123,7 @@ impl Display for Board {
                 let pos = row * 3 + col;
                 match self.get_square(pos) {
                     Some(player) => write!(f, "{} | ", player)?,
-                    None => write!(f, "  | ")?,
+                    None => write!(f, "{} | ", pos)?,
                 }
             }
             writeln!(f)?;
@@ -135,7 +161,7 @@ impl TryFrom<&str> for Board {
 }
 
 /// A player in XO
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Player {
     /// Player 1
     X,
