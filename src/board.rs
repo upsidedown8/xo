@@ -123,7 +123,7 @@ impl Display for Board {
                 let pos = row * 3 + col;
                 match self.get_square(pos) {
                     Some(player) => write!(f, "{} | ", player)?,
-                    None => write!(f, "{} | ", pos)?,
+                    None => write!(f, "  | ")?,
                 }
             }
             writeln!(f)?;
