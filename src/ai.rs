@@ -1,7 +1,12 @@
-use crate::board::{Board, GameState};
-use crate::error::{Error, Result};
+use crate::{
+    board::{Board, GameState},
+    error::{Error, Result},
+};
 
-fn negamax(board: &mut Board) -> i32 {
+const POS_INF: i32 = i32::MAX;
+const NEG_INF: i32 = i32::MIN + 1;
+
+fn negamax(board: &mut Board, mut alpha: i32, beta: i32) -> i32 {
     let next_player = board.next_player();
 
     match board.state() {
@@ -9,13 +14,19 @@ fn negamax(board: &mut Board) -> i32 {
         GameState::Winner(_) => -1,
         GameState::Draw => 0,
         GameState::Indeterminate => {
-            let mut best_score = i32::MIN;
+            let mut best_score = NEG_INF;
 
             for pos in 0..9 {
                 if board.get_square(pos).is_none() {
                     board.set_square(pos, Some(next_player));
-                    best_score = best_score.max(-negamax(board));
+                    best_score = best_score.max(-negamax(board, -beta, -alpha));
                     board.set_square(pos, None);
+
+                    alpha = alpha.max(best_score);
+
+                    if alpha >= beta {
+                        break;
+                    }
                 }
             }
 
@@ -36,13 +47,13 @@ pub fn best_move(board: &Board) -> Result<usize> {
     } else {
         let mut board = board.clone();
 
-        let mut best_score = i32::MIN;
+        let mut best_score = NEG_INF;
         let mut best_move = None;
 
         for pos in 0..9 {
             if board.get_square(pos).is_none() {
                 board.set_square(pos, Some(board.next_player()));
-                let score = -negamax(&mut board);
+                let score = -negamax(&mut board, NEG_INF, POS_INF);
                 board.set_square(pos, None);
                 if score >= best_score {
                     best_score = score;
